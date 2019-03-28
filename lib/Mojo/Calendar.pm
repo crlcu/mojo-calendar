@@ -154,6 +154,12 @@ See L<DateTime::TimeZone> for more details.
 L<Mojo::Calendar> inherits all methods from L<DateTime> and implements
 the following new ones.
 
+=head2 new
+
+    my $datetime = Mojo::Calendar->new;
+
+Calendar object.
+
 =head2 days_ago
 
     my $datetime = $calendar->days_ago(2);
