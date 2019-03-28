@@ -1,7 +1,7 @@
 package Mojo::Calendar;
 use Mojo::Base -base;
 
-our $VERSION = '0.0.1';
+our $VERSION = '0.0.2';
 
 use Carp qw(croak);
 use DateTime;

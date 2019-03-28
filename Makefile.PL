@@ -19,7 +19,9 @@ WriteMakefile(
     },
     PREREQ_PM => {
         'Mojolicious' => 0,
-        'Test::More' => 0
+        'Test::More' => 0,
+        'DateTime' => 0,
+        'DateTime::Format::Flexible' => 0,
     },
     META_MERGE   => {
         resources => {
