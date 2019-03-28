@@ -2,7 +2,7 @@ use Mojo::Base -strict;
 use Test::More;
 use Mojo::Calendar;
 
-my $date = WholesaleApp::Util::Calendar->new(from => '2019-03-20');
+my $date = Mojo::Calendar->new(from => '2019-03-20');
 
 is($date->yesterday->ymd, '2019-03-19');
 is($date->today->ymd, '2019-03-20');
