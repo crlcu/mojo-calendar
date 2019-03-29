@@ -1,7 +1,7 @@
 package Mojo::Calendar;
 use Mojo::Base -base;
 
-our $VERSION = '0.0.2';
+our $VERSION = '0.0.3';
 
 use Carp qw(croak);
 use DateTime;
@@ -48,7 +48,7 @@ sub days_ago {
         ->subtract(days => shift);
 }
 
-sub firt_day_of_next_month {
+sub first_day_of_next_month {
     return shift->datetime
         ->clone
         ->add(months => 1)
@@ -166,9 +166,9 @@ Calendar object.
 
 2 days ago datetime object.
 
-=head2 firt_day_of_next_month
+=head2 first_day_of_next_month
 
-    my $datetime = $calendar->firt_day_of_next_month;
+    my $datetime = $calendar->first_day_of_next_month;
 
 First day of next month datetime object.
 
