@@ -1,91 +1,109 @@
 package Mojo::Calendar;
-use Mojo::Base -base;
+use Mojo::Base 'DateTime';
 
 our $VERSION = '0.0.3';
 
-use Carp qw(croak);
-use DateTime;
 use DateTime::Format::Flexible;
 
-has [qw(from)];
+has '_from';
 
-has 'datetime' => sub {
-    my $self = shift;
+sub new {
+    my $class = shift;
+    my $args = @_;
 
-    return $self->from if (ref($self->from) eq 'DateTime');
-
-    if ($self->from) {
-        if (my $datetime = DateTime::Format::Flexible->parse_datetime($self->from)) {
-            return $datetime
-                ->set_locale($self->locale)
-                ->set_time_zone($self->time_zone);
+    if (@_ > 1) {
+        $args = { @_ };
+    } else {
+        if (ref $_[0] eq 'HASH') {
+            $args = $_[0];
+        } else {
+            $args = { from => $_[0] };
         }
     }
 
-    return DateTime->now
-        ->set_locale($self->locale)
-        ->set_time_zone($self->time_zone);
-};
+    my $datetime;
 
-has 'locale' => 'en_gb';
-has 'time_zone' => 'Europe/London';
+    my $locale = delete $args->{ locale } || 'en_gb';
+    my $time_zone = delete $args->{ time_zone } || 'Europe/London';
 
-sub new {
-    my $self = shift;
-
-    if (@_ > 1) {
-        return $self->SUPER::new({@_});
-    } elsif (ref $_[0] eq 'HASH') {
-        return $self->SUPER::new(@_);
+    if ($args->{ from }) {
+        $datetime = DateTime::Format::Flexible->parse_datetime($args->{ from })
     }
 
-    return $self->SUPER::new(from => $_[0]);
+    if (!$datetime) {
+        $datetime = $class->SUPER::now;
+    }
+
+    my $self = $class->SUPER::new(
+        year        => $datetime->year,
+        month       => $datetime->month,
+        day         => $datetime->day,
+        hour        => $datetime->hour,
+        minute      => $datetime->minute,
+        second      => $datetime->second,
+        nanosecond  => $datetime->nanosecond,
+        locale      => $locale,
+        time_zone   => $time_zone,
+    );
+
+    $datetime->set_locale($locale)
+        ->set_time_zone($time_zone);
+
+    $self->_from($datetime);
+
+    return $self;
 }
 
 sub days_ago {
-    return shift->datetime
+    return shift
+        ->_from
         ->clone
         ->subtract(days => shift);
 }
 
-sub first_day_of_next_month {
-    return shift->datetime
+sub days_from_now {
+    return shift
+        ->_from
         ->clone
-        ->add(months => 1)
+        ->add(days => shift);
+}
+
+sub first_day_of_next_month {
+    return shift
+        ->months_from_now(1)
+        ->set_day(1);
+}
+
+sub first_day_of_prev_month {
+    return shift
+        ->months_ago(1)
         ->set_day(1);
 }
 
 sub months_ago {
-    return shift->datetime
+    return shift
+        ->_from
         ->clone
         ->subtract(months => shift);
 }
 
+sub months_from_now {
+    return shift
+        ->_from
+        ->clone
+        ->add(months => shift);
+}
+
 sub today {
-    return shift;
+    return shift->clone;
 }
 
 sub tomorrow {
-    return shift->datetime
-        ->clone
-        ->add(days => 1);
+    return shift->days_from_now(1);
 }
 
 sub yesterday {
     return shift->days_ago(1);
-}
-
-sub AUTOLOAD {
-    my $self   = shift;
-    our $AUTOLOAD;
-    my $method = $AUTOLOAD =~ /::(\w+)$/ ? $1 : undef;
-
-    $method =~ s/.*:://;
-    return unless $method =~ /[^A-Z]/; # skip DESTROY and all-cap methods
-
-    return $self->datetime->$method if ($self->datetime && $self->datetime->can($method));
-
-    croak "Undefined method $AUTOLOAD";
 }
 
 1;
@@ -122,32 +140,11 @@ Mojo::Calendar - Extended DateTime manipulator
 
 =head1 DESCRIPTION
 
-L<Mojo::Asset::File> is a file storage backend for HTTP content.
-
-=head1 EVENTS
-
-L<Mojo::Asset::File> inherits all events from L<Mojo::Asset>.
+L<Mojo::Calendar> is a DateTime manipulator which includes humman readable methods.
 
 =head1 ATTRIBUTES
 
-L<Mojo::Calendar> inherits all attributes from L<DateTime> and implements
-the following new ones.
-
-=head2 locale
-
-    my $locale = $file->locale;
-    $locale    = $file->locale($locale);
-
-Locale, defaults to the C<en_gb>.
-See L<DateTime::Locale> for more details.
-
-=head2 time_zone
-
-    my $time_zone = $file->time_zone;
-    $time_zone    = $file->time_zone($time_zone);
-
-Timezone, defaults to the C<Europe/London>.
-See L<DateTime::TimeZone> for more details.
+L<Mojo::Calendar> inherits all attributes from L<DateTime>.
 
 =head1 METHODS
 
@@ -164,37 +161,55 @@ Calendar object.
 
     my $datetime = $calendar->days_ago(2);
 
-2 days ago datetime object.
+2 days since initial datetime.
+
+=head2 days_from_now
+
+    my $datetime = $calendar->days_from_now(2);
+
+2 days from initial datetime.
 
 =head2 first_day_of_next_month
 
     my $datetime = $calendar->first_day_of_next_month;
 
-First day of next month datetime object.
+First day of next month from initial datetime.
+
+=head2 first_day_of_prev_month
+
+    my $datetime = $calendar->first_day_of_prev_month;
+
+First day of previous month from initial datetime.
 
 =head2 months_ago
 
     my $datetime = $calendar->months_ago(3);
 
-3 months ago datetime object.
+3 months since initial datetime.
+
+=head2 months_from_now
+
+    my $datetime = $calendar->months_from_now(3);
+
+3 months from initial datetime.
 
 =head2 today
 
     my $datetime = $calendar->today;
 
-today datetime object.
+today based on initial datetime.
 
 =head2 tomorrow
 
     my $datetime = $calendar->tomorrow;
 
-tomorrow datetime object.
+tomorrow based on initial datetime.
 
 =head2 yesterday
 
     my $datetime = $calendar->yesterday;
 
-yesterday datetime object.
+yesterday based on initial datetime.
 
 =head1 SEE ALSO
 
