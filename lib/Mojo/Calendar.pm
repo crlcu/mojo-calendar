@@ -24,8 +24,8 @@ sub new {
     $args->{ locale } ||= 'en_gb';
     $args->{ time_zone } ||= 'Europe/London';
 
-    if ($args->{ from }) {
-        $datetime = DateTime::Format::Flexible->parse_datetime($args->{ from })
+    if (my $from = delete($args->{ from })) {
+        $datetime = DateTime::Format::Flexible->parse_datetime($from);
     }
 
     if (!$datetime) {
