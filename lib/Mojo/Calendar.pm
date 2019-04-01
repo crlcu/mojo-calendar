@@ -1,11 +1,9 @@
 package Mojo::Calendar;
 use Mojo::Base 'DateTime';
 
-our $VERSION = '0.0.3';
+our $VERSION = '0.0.4';
 
 use DateTime::Format::Flexible;
-
-has '_from';
 
 sub new {
     my $class = shift;
@@ -23,15 +21,15 @@ sub new {
 
     my $datetime;
 
-    my $locale = delete $args->{ locale } || 'en_gb';
-    my $time_zone = delete $args->{ time_zone } || 'Europe/London';
+    $args->{ locale } ||= 'en_gb';
+    $args->{ time_zone } ||= 'Europe/London';
 
     if ($args->{ from }) {
         $datetime = DateTime::Format::Flexible->parse_datetime($args->{ from })
     }
 
     if (!$datetime) {
-        $datetime = $class->SUPER::now;
+        $datetime = $class->SUPER::new(%$args);
     }
 
     my $self = $class->SUPER::new(
@@ -42,54 +40,46 @@ sub new {
         minute      => $datetime->minute,
         second      => $datetime->second,
         nanosecond  => $datetime->nanosecond,
-        locale      => $locale,
-        time_zone   => $time_zone,
+        locale      => $args->{ locale },
+        time_zone   => $args->{ time_zone },
     );
-
-    $datetime->set_locale($locale)
-        ->set_time_zone($time_zone);
-
-    $self->_from($datetime);
-
+    
     return $self;
 }
 
 sub days_ago {
     return shift
-        ->_from
         ->clone
         ->subtract(days => shift);
 }
 
 sub days_from_now {
     return shift
-        ->_from
         ->clone
         ->add(days => shift);
 }
 
 sub first_day_of_next_month {
     return shift
-        ->months_from_now(1)
-        ->set_day(1);
+        ->clone
+        ->set_day(1)
+        ->months_from_now(1);
 }
 
 sub first_day_of_prev_month {
     return shift
-        ->months_ago(1)
-        ->set_day(1);
+        ->set_day(1)
+        ->months_ago(1);
 }
 
 sub months_ago {
     return shift
-        ->_from
         ->clone
         ->subtract(months => shift);
 }
 
 sub months_from_now {
     return shift
-        ->_from
         ->clone
         ->add(months => shift);
 }
